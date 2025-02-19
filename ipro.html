@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPro - شبکه اجتماعی</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #f9f9f9;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4a148c;
+            color: white;
+            padding: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        main {
+            margin-top: 20px;
+        }
+        .post-form {
+            background: white;
+            padding: 20px;
+            width: 50%;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], input[type="file"] {
+            width: 90%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #7b1fa2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #6a1b9a;
+        }
+        .post-container {
+            width: 50%;
+            margin: 20px auto;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+        .post-image {
+            width: auto;
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .actions {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        iPro - شبکه اجتماعی ای پرو
+    </header>
+    
+    <main>
+        <div class="post-form">
+            <input type="text" id="userName" placeholder="نام خود را وارد کنید...">
+            <input type="text" id="postText" placeholder="متن پست را وارد کنید...">
+            <input type="file" id="postImage" accept="image/*">
+            <button onclick="addPost()">ارسال پست</button>
+        </div>
+        <div id="posts"></div>
+    </main>
+    
+    <script>
+        let posts = JSON.parse(localStorage.getItem("posts")) || [];
+
+        function addPost() {
+            let userName = document.getElementById("userName").value;
+            let postText = document.getElementById("postText").value;
+            let postImageInput = document.getElementById("postImage");
+            let postImage = postImageInput.files[0];
+
+            if (userName.trim() !== "" && postText.trim() !== "" && postImage) {
+                let reader = new FileReader();
+                reader.onload = function(event) {
+                    let post = { name: userName, text: postText, image: event.target.result, likes: 0, liked: false };
+                    posts.push(post);
+                    localStorage.setItem("posts", JSON.stringify(posts));
+                    document.getElementById("userName").value = "";
+                    document.getElementById("postText").value = "";
+                    postImageInput.value = "";
+                    renderPosts();
+                };
+                reader.readAsDataURL(postImage);
+            }
+        }
+
+        function toggleLike(index) {
+            if (!posts[index].liked) {
+                posts[index].likes++;
+                posts[index].liked = true;
+                localStorage.setItem("posts", JSON.stringify(posts));
+            }
+            renderPosts();
+        }
+
+        function deletePost(index) {
+            let password = prompt("برای حذف پست، رمز عبور را وارد کنید:");
+            if (password === "dlipro") {
+                posts.splice(index, 1);
+                localStorage.setItem("posts", JSON.stringify(posts));
+                renderPosts();
+            } else {
+                alert("رمز عبور اشتباه است!");
+            }
+        }
+
+        function renderPosts() {
+            let postsContainer = document.getElementById("posts");
+            postsContainer.innerHTML = "";
+            posts.forEach((post, index) => {
+                postsContainer.innerHTML += `
+                    <div class="post-container">
+                        <h4>${post.name}</h4>
+                        <p>${post.text}</p>
+                        <img src="${post.image}" class="post-image" alt="Post Image">
+                        <div class="actions">
+                            <button onclick="toggleLike(${index})" ${post.liked ? 'disabled' : ''}>❤️ لایک (${post.likes})</button>
+                            <button onclick="deletePost(${index})">🗑 حذف پست</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        renderPosts();
+    </script>
+</body>
+</html>
