@@ -16,9 +16,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     h1 {
@@ -38,6 +38,7 @@
       width: 90%;
       max-width: 450px;
       backdrop-filter: blur(10px);
+      margin-bottom: 30px;
     }
 
     .status {
@@ -47,7 +48,7 @@
       text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
     }
 
-    /* دکمه کلیک: دایره‌ای، بزرگ و با افکت‌های پویا */
+    /* دکمه کلیک: دایره‌ای، بزرگ و با افکت‌های بی‌نهایت */
     #clickButton {
       width: 140px;
       height: 140px;
@@ -64,6 +65,7 @@
       font-weight: bold;
       position: relative;
       overflow: hidden;
+      animation: pulse 2s infinite;
     }
 
     #clickButton:hover {
@@ -75,9 +77,10 @@
       background: #555;
       cursor: not-allowed;
       box-shadow: none;
+      animation: none;
     }
 
-    /* دکمه ارتقا با طراحی مدرن و رنگارنگ */
+    /* دکمه ارتقا */
     #upgradeButton {
       font-size: 1.5rem;
       padding: 15px;
@@ -91,6 +94,7 @@
       margin: 10px 0;
       box-shadow: 0px 4px 10px rgba(255, 87, 34, 0.5);
       font-weight: bold;
+      animation: pulse 3s infinite;
     }
 
     #upgradeButton:hover {
@@ -98,7 +102,7 @@
       background: linear-gradient(90deg, #ff5722, #ff3d00);
     }
 
-    /* دکمه ریست بازی با استایل منحصر به فرد */
+    /* دکمه ریست بازی */
     #resetButton {
       font-size: 1.5rem;
       padding: 15px;
@@ -112,22 +116,110 @@
       margin: 10px 0;
       box-shadow: 0px 4px 10px rgba(138, 43, 226, 0.5);
       font-weight: bold;
+      animation: pulse 3s infinite;
     }
 
     #resetButton:hover {
       transform: scale(1.05);
       background: linear-gradient(90deg, #4a00e0, #8e2de2);
     }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    /* بخش کارت‌های درآمدزا */
+    .cards-section {
+      width: 90%;
+      max-width: 450px;
+      background: rgba(30,30,30,0.95);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      backdrop-filter: blur(10px);
+      margin-bottom: 30px;
+    }
+
+    .cards-section h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #ff9800, #ff5722);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0px 4px 10px rgba(255,87,34,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: infiniteGlow 3s infinite;
+    }
+
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.5rem;
+      color: #fff;
+    }
+
+    .card p {
+      margin: 5px 0;
+      font-size: 1.2rem;
+    }
+
+    .card button {
+      font-size: 1rem;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      color: #ff5722;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .card button:hover {
+      transform: scale(1.1);
+    }
+
+    @keyframes infiniteGlow {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(255,255,255,0.5);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(255,255,255,1);
+      }
+    }
   </style>
   <script>
     (function () {
+      // تعریف داده‌های کارت‌ها
+      const cardTypes = [
+        { id: "card1", name: "کارت برونزی", income: 1, multiplier: 1.5 },
+        { id: "card2", name: "کارت نقره‌ای", income: 5, multiplier: 1.6 },
+        { id: "card3", name: "کارت طلایی", income: 10, multiplier: 1.7 }
+      ];
+
+      // مقداردهی اولیه داده‌های بازی
       let gameData = JSON.parse(localStorage.getItem("gameData")) || {
         score: 0,
         clickValue: 1,
         upgradeCost: 10,
         energy: 10,
         maxEnergy: 10,
-        lastEnergyTime: Date.now()
+        lastEnergyTime: Date.now(),
+        cards: {
+          card1: { count: 0, cost: 100 },
+          card2: { count: 0, cost: 500 },
+          card3: { count: 0, cost: 2000 }
+        }
       };
 
       function saveGame() {
@@ -181,19 +273,28 @@
             upgradeCost: 10,
             energy: 10,
             maxEnergy: 10,
-            lastEnergyTime: Date.now()
+            lastEnergyTime: Date.now(),
+            cards: {
+              card1: { count: 0, cost: 100 },
+              card2: { count: 0, cost: 500 },
+              card3: { count: 0, cost: 2000 }
+            }
           };
           saveGame();
           updateUI();
+          updateCardsUI();
         }
       }
 
-      function regainEnergy() {
-        let now = Date.now();
-        let timePassed = Math.floor((now - gameData.lastEnergyTime) / 1500);
-        if (timePassed > 0) {
-          gameData.energy = Math.min(gameData.maxEnergy, gameData.energy + timePassed);
-          gameData.lastEnergyTime = now;
+      // درآمد غیرفعال از کارت‌ها (هر ثانیه)
+      function passiveIncome() {
+        let totalIncome = 0;
+        cardTypes.forEach(function(card) {
+          let cardData = gameData.cards[card.id];
+          totalIncome += cardData.count * card.income;
+        });
+        if (totalIncome > 0) {
+          gameData.score += totalIncome;
           saveGame();
           updateUI();
         }
@@ -204,17 +305,64 @@
         document.getElementById("energy").innerText = "انرژی: " + gameData.energy + "/" + gameData.maxEnergy;
         document.getElementById("upgradeButton").innerText = "افزایش قدرت کلیک (هزینه: " + gameData.upgradeCost + ")";
         document.getElementById("clickButton").disabled = (gameData.energy === 0);
+        updateCardsUI();
       }
 
-      setInterval(regainEnergy, 1500);
+      function updateCardsUI() {
+        let container = document.getElementById("cardsContainer");
+        container.innerHTML = "";
+        cardTypes.forEach(function(card) {
+          let cardData = gameData.cards[card.id];
+          let cardDiv = document.createElement("div");
+          cardDiv.className = "card";
+          cardDiv.innerHTML = `
+            <h3>${card.name}</h3>
+            <p>تعداد: ${cardData.count}</p>
+            <p>هزینه: ${cardData.cost}</p>
+            <p>درآمد: ${card.income} کوین/ثانیه</p>
+            <button onclick="buyCard('${card.id}')">خرید</button>
+          `;
+          container.appendChild(cardDiv);
+        });
+      }
+
+      function buyCard(cardId) {
+        let cardType = cardTypes.find(c => c.id === cardId);
+        let cardData = gameData.cards[cardId];
+        if (gameData.score >= cardData.cost) {
+          gameData.score -= cardData.cost;
+          cardData.count++;
+          cardData.cost = Math.floor(cardData.cost * cardType.multiplier);
+          saveGame();
+          updateUI();
+        } else {
+          alert("امتیاز کافی برای خرید این کارت نداری!");
+        }
+      }
+
+      // ست کردن تایمرها
+      setInterval(function() {
+        // بازیابی انرژی هر 1500 میلی‌ثانیه
+        let now = Date.now();
+        let timePassed = Math.floor((now - gameData.lastEnergyTime) / 1500);
+        if (timePassed > 0) {
+          gameData.energy = Math.min(gameData.maxEnergy, gameData.energy + timePassed);
+          gameData.lastEnergyTime = now;
+          saveGame();
+          updateUI();
+        }
+      }, 1500);
+
+      setInterval(passiveIncome, 1000);
+
       window.onload = function() {
-        regainEnergy();
         updateUI();
       };
 
       window.hitMouse = hitMouse;
       window.buyUpgrade = buyUpgrade;
       window.resetGame = resetGame;
+      window.buyCard = buyCard;
     })();
   </script>
 </head>
@@ -226,6 +374,11 @@
     <button id="clickButton" onclick="hitMouse()">💰</button>
     <button id="upgradeButton" onclick="buyUpgrade()">⚡ افزایش قدرت کلیک (هزینه: 10)</button>
     <button id="resetButton" onclick="resetGame()">🔄 ریست بازی</button>
+  </div>
+
+  <div class="cards-section">
+    <h2>کارت‌های درآمدزا</h2>
+    <div id="cardsContainer"></div>
   </div>
 </body>
 </html>
