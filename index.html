@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>موس کامبت</title>
+  <title>موس کامبت - نسخه اقتصادی</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
 
@@ -48,7 +48,7 @@
       text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
     }
 
-    /* دکمه کلیک: دایره‌ای، بزرگ و با افکت‌های بی‌نهایت */
+    /* دکمه کلیک */
     #clickButton {
       width: 140px;
       height: 140px;
@@ -63,59 +63,12 @@
       transition: all 0.3s ease;
       border: none;
       font-weight: bold;
-      position: relative;
-      overflow: hidden;
       animation: pulse 2s infinite;
     }
 
     #clickButton:hover {
       transform: scale(1.15);
       background: radial-gradient(circle, #00e676, #00ff7f);
-    }
-
-    #clickButton:disabled {
-      background: #555;
-      cursor: not-allowed;
-      box-shadow: none;
-      animation: none;
-    }
-
-    /* دکمه ارتقا کلیک */
-    #upgradeButton, #resetButton {
-      font-size: 1.5rem;
-      padding: 15px;
-      border: none;
-      border-radius: 15px;
-      color: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 100%;
-      margin: 10px 0;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
-      font-weight: bold;
-      animation: pulse 3s infinite;
-    }
-
-    #upgradeButton {
-      background: linear-gradient(90deg, #ff9800, #ff5722);
-    }
-    #upgradeButton:hover {
-      transform: scale(1.05);
-      background: linear-gradient(90deg, #ff5722, #ff3d00);
-    }
-
-    #resetButton {
-      background: linear-gradient(90deg, #8e2de2, #4a00e0);
-    }
-    #resetButton:hover {
-      transform: scale(1.05);
-      background: linear-gradient(90deg, #4a00e0, #8e2de2);
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
     }
 
     /* بخش کارت‌های درآمدزا */
@@ -147,7 +100,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      animation: infiniteGlow 3s infinite;
     }
 
     .card h3 {
@@ -170,262 +122,102 @@
       color: #ff5722;
       cursor: pointer;
       transition: transform 0.3s ease;
-      margin: 5px;
+      margin-top: 10px;
     }
 
     .card button:hover {
       transform: scale(1.1);
     }
 
-    @keyframes infiniteGlow {
-      0%, 100% {
-        box-shadow: 0 0 10px rgba(255,255,255,0.5);
-      }
-      50% {
-        box-shadow: 0 0 20px rgba(255,255,255,1);
-      }
-    }
   </style>
   <script>
-    (function () {
-      /* تعریف انواع کارت‌ها با خصوصیات پایه */
-      const cardTypes = [
-        { 
-          id: "card1", 
-          name: "کارت برونزی", 
-          baseIncome: 1, 
-          purchaseMultiplier: 1.5, 
-          baseCost: 100, 
-          baseUpgradeCost: 200, 
-          upgradeBonus: 0.1 
-        },
-        { 
-          id: "card2", 
-          name: "کارت نقره‌ای", 
-          baseIncome: 5, 
-          purchaseMultiplier: 1.6, 
-          baseCost: 500, 
-          baseUpgradeCost: 1000, 
-          upgradeBonus: 0.1 
-        },
-        { 
-          id: "card3", 
-          name: "کارت طلایی", 
-          baseIncome: 10, 
-          purchaseMultiplier: 1.7, 
-          baseCost: 2000, 
-          baseUpgradeCost: 4000, 
-          upgradeBonus: 0.1 
-        },
-        { 
-          id: "card4", 
-          name: "کارت خرید شرکت", 
-          baseIncome: 20, 
-          purchaseMultiplier: 1.8, 
-          baseCost: 10000, 
-          baseUpgradeCost: 20000, 
-          upgradeBonus: 0.2 
-        },
-        { 
-          id: "card5", 
-          name: "شرکت هواپیمایی", 
-          baseIncome: 50, 
-          purchaseMultiplier: 2.0, 
-          baseCost: 50000, 
-          baseUpgradeCost: 100000, 
-          upgradeBonus: 0.2 
-        }
-      ];
-
-      // مقداردهی اولیه به داده‌های بازی
-      let defaultGameData = {
-        score: 0,
-        clickValue: 1,
-        upgradeCost: 10,
-        energy: 10,
-        maxEnergy: 10,
-        lastEnergyTime: Date.now(),
-        cards: {}
-      };
-
-      // اگر داده‌ای از قبل وجود ندارد، کارت‌ها را با مقادیر پایه مقداردهی می‌کنیم.
-      cardTypes.forEach(card => {
-        defaultGameData.cards[card.id] = {
-          count: 0,
-          cost: card.baseCost,
-          upgradeLevel: 0,
-          upgradeCost: card.baseUpgradeCost
-        };
-      });
-
-      let gameData = JSON.parse(localStorage.getItem("gameData")) || defaultGameData;
-
-      function saveGame() {
-        localStorage.setItem("gameData", JSON.stringify(gameData));
+    let gameData = {
+      score: 0,
+      clickValue: 1,
+      cards: {
+        company: { count: 0, income: 50, cost: 1000, upgradeCost: 2000, level: 1 },
+        airline: { count: 0, income: 200, cost: 5000, upgradeCost: 10000, level: 1 }
       }
+    };
 
-      // پخش افکت صوتی کوتاه هنگام کلیک
-      function playClickSound() {
-        try {
-          let context = new (window.AudioContext || window.webkitAudioContext)();
-          let oscillator = context.createOscillator();
-          oscillator.type = 'triangle';
-          oscillator.frequency.setValueAtTime(200, context.currentTime);
-          oscillator.connect(context.destination);
-          oscillator.start();
-          oscillator.stop(context.currentTime + 0.1);
-        } catch (e) {
-          // در صورت عدم پشتیبانی، صدا پخش نمی‌شود
-        }
-      }
+    function hitMouse() {
+      gameData.score += gameData.clickValue;
+      updateUI();
+    }
 
-      function hitMouse() {
-        if (gameData.energy > 0) {
-          playClickSound();
-          gameData.score += gameData.clickValue;
-          gameData.energy--;
-          saveGame();
-          updateUI();
-        } else {
-          alert("انرژی کافی نداری! منتظر بمون تا بازیابی بشه.");
-        }
-      }
-
-      function buyUpgrade() {
-        if (gameData.score >= gameData.upgradeCost) {
-          gameData.score -= gameData.upgradeCost;
-          gameData.clickValue++;
-          gameData.upgradeCost = Math.floor(gameData.upgradeCost * 1.5);
-          saveGame();
-          updateUI();
-        } else {
-          alert("امتیاز کافی برای ارتقا نداری!");
-        }
-      }
-
-      function resetGame() {
-        if (confirm("آیا مطمئن هستید که می‌خواهید بازی را ریست کنید؟")) {
-          gameData = JSON.parse(JSON.stringify(defaultGameData));
-          gameData.lastEnergyTime = Date.now();
-          saveGame();
-          updateUI();
-        }
-      }
-
-      // محاسبه درآمد غیرفعال از کارت‌ها (هر ثانیه)
-      function passiveIncome() {
-        let totalIncome = 0;
-        cardTypes.forEach(function(card) {
-          let cardData = gameData.cards[card.id];
-          // درآمد هر کارت با در نظر گرفتن سطح ارتقا:
-          let effectiveIncome = card.baseIncome * (1 + cardData.upgradeLevel * card.upgradeBonus);
-          totalIncome += cardData.count * effectiveIncome;
-        });
-        if (totalIncome > 0) {
-          gameData.score += totalIncome;
-          saveGame();
-          updateUI();
-        }
-      }
-
-      function updateUI() {
-        document.getElementById("score").innerText = "امتیاز: " + gameData.score;
-        document.getElementById("energy").innerText = "انرژی: " + gameData.energy + "/" + gameData.maxEnergy;
-        document.getElementById("upgradeButton").innerText = "⚡ افزایش قدرت کلیک (هزینه: " + gameData.upgradeCost + ")";
-        document.getElementById("clickButton").disabled = (gameData.energy === 0);
-        updateCardsUI();
-      }
-
-      function updateCardsUI() {
-        let container = document.getElementById("cardsContainer");
-        container.innerHTML = "";
-        cardTypes.forEach(function(card) {
-          let cardData = gameData.cards[card.id];
-          let effectiveIncome = (card.baseIncome * (1 + cardData.upgradeLevel * card.upgradeBonus)).toFixed(2);
-          let cardDiv = document.createElement("div");
-          cardDiv.className = "card";
-          cardDiv.innerHTML = `
-            <h3>${card.name}</h3>
-            <p>تعداد: ${cardData.count}</p>
-            <p>قیمت خرید: ${cardData.cost}</p>
-            <p>درآمد هر کارت: ${effectiveIncome} کوین/ثانیه</p>
-            <p>سطح ارتقا: ${cardData.upgradeLevel}</p>
-            <p>قیمت ارتقا: ${cardData.upgradeCost}</p>
-            <button onclick="buyCard('${card.id}')">خرید</button>
-            <button onclick="upgradeCard('${card.id}')">ارتقا</button>
-          `;
-          container.appendChild(cardDiv);
-        });
-      }
-
-      function buyCard(cardId) {
-        let cardType = cardTypes.find(c => c.id === cardId);
-        let cardData = gameData.cards[cardId];
-        if (gameData.score >= cardData.cost) {
-          gameData.score -= cardData.cost;
-          cardData.count++;
-          cardData.cost = Math.floor(cardData.cost * cardType.purchaseMultiplier);
-          saveGame();
-          updateUI();
-        } else {
-          alert("امتیاز کافی برای خرید این کارت نداری!");
-        }
-      }
-
-      function upgradeCard(cardId) {
-        let cardType = cardTypes.find(c => c.id === cardId);
-        let cardData = gameData.cards[cardId];
-        if (gameData.score >= cardData.upgradeCost) {
-          gameData.score -= cardData.upgradeCost;
-          cardData.upgradeLevel++;
-          cardData.upgradeCost = Math.floor(cardData.upgradeCost * cardType.purchaseMultiplier);
-          saveGame();
-          updateUI();
-        } else {
-          alert("امتیاز کافی برای ارتقای این کارت نداری!");
-        }
-      }
-
-      // بازیابی انرژی هر 1500 میلی‌ثانیه
-      setInterval(function() {
-        let now = Date.now();
-        let timePassed = Math.floor((now - gameData.lastEnergyTime) / 1500);
-        if (timePassed > 0) {
-          gameData.energy = Math.min(gameData.maxEnergy, gameData.energy + timePassed);
-          gameData.lastEnergyTime = now;
-          saveGame();
-          updateUI();
-        }
-      }, 1500);
-
-      // درآمد غیرفعال از کارت‌ها هر ثانیه
-      setInterval(passiveIncome, 1000);
-
-      window.onload = function() {
+    function buyCard(cardId) {
+      let card = gameData.cards[cardId];
+      if (gameData.score >= card.cost) {
+        gameData.score -= card.cost;
+        card.count++;
+        card.cost *= 1.5;
         updateUI();
-      };
+      } else {
+        alert("امتیاز کافی برای خرید ندارید!");
+      }
+    }
 
-      window.hitMouse = hitMouse;
-      window.buyUpgrade = buyUpgrade;
-      window.resetGame = resetGame;
-      window.buyCard = buyCard;
-      window.upgradeCard = upgradeCard;
-    })();
+    function upgradeCard(cardId) {
+      let card = gameData.cards[cardId];
+      if (gameData.score >= card.upgradeCost) {
+        gameData.score -= card.upgradeCost;
+        card.level++;
+        card.income *= 2;
+        card.upgradeCost *= 2;
+        updateUI();
+      } else {
+        alert("امتیاز کافی برای ارتقا ندارید!");
+      }
+    }
+
+    function passiveIncome() {
+      let totalIncome = 0;
+      for (let cardId in gameData.cards) {
+        let card = gameData.cards[cardId];
+        totalIncome += card.count * card.income;
+      }
+      gameData.score += totalIncome;
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("score").innerText = "امتیاز: " + gameData.score;
+      document.getElementById("cardsContainer").innerHTML = "";
+
+      for (let cardId in gameData.cards) {
+        let card = gameData.cards[cardId];
+        let cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+        cardDiv.innerHTML = `
+          <h3>${cardId === "company" ? "شرکت خصوصی" : "شرکت هواپیمایی"}</h3>
+          <p>تعداد: ${card.count}</p>
+          <p>درآمد: ${card.income} کوین/ثانیه</p>
+          <p>سطح: ${card.level}</p>
+          <p>هزینه خرید: ${card.cost}</p>
+          <p>هزینه ارتقا: ${card.upgradeCost}</p>
+          <button onclick="buyCard('${cardId}')">خرید</button>
+          <button onclick="upgradeCard('${cardId}')">ارتقا</button>
+        `;
+        document.getElementById("cardsContainer").appendChild(cardDiv);
+      }
+    }
+
+    setInterval(passiveIncome, 1000);
+
   </script>
 </head>
 <body>
-  <h1>🐭 موس کامبت 🐭</h1>
+  <h1>🐭 موس کامبت - نسخه اقتصادی 🏦</h1>
   <div class="container">
     <p id="score" class="status">امتیاز: 0</p>
-    <p id="energy" class="status">انرژی: 10/10</p>
     <button id="clickButton" onclick="hitMouse()">💰</button>
-    <button id="upgradeButton" onclick="buyUpgrade()">⚡ افزایش قدرت کلیک (هزینه: 10)</button>
-    <button id="resetButton" onclick="resetGame()">🔄 ریست بازی</button>
   </div>
 
   <div class="cards-section">
-    <h2>کارت‌های درآمدزا</h2>
+    <h2>سرمایه‌گذاری‌های بزرگ</h2>
     <div id="cardsContainer"></div>
   </div>
+
+  <script>updateUI();</script>
 </body>
 </html>
