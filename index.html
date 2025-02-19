@@ -61,9 +61,7 @@
             text-align: left;
         }
         .post-image {
-            width: auto;
-            max-width: 100%;
-            max-height: 400px;
+            width: 100%;
             object-fit: contain;
             border-radius: 10px;
             margin-top: 10px;
@@ -75,7 +73,7 @@
 </head>
 <body>
     <header>
-        iPro - شبکه اجتماعی ای پرو
+        iPro - شبکه اجتماعی جهانی
     </header>
     
     <main>
@@ -89,9 +87,39 @@
     </main>
     
     <script>
-        let posts = JSON.parse(localStorage.getItem("posts")) || [];
+        const BIN_ID = "67b5bc1be41b4d34e493e265 ";
+        const API_KEY = "$2a$10$y1p34HYCk6wOjQKV64trS.mb90cqNCN1w44jta/pat2rfetyU5qp.";
+        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-        function addPost() {
+        async function fetchPosts() {
+            try {
+                let response = await fetch(`${API_URL}/latest`, {
+                    headers: { "X-Master-Key": API_KEY }
+                });
+                let data = await response.json();
+                return data.record.posts || [];
+            } catch (error) {
+                console.error("خطا در دریافت پست‌ها:", error);
+                return [];
+            }
+        }
+
+        async function savePosts(posts) {
+            try {
+                await fetch(API_URL, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": API_KEY
+                    },
+                    body: JSON.stringify({ posts: posts })
+                });
+            } catch (error) {
+                console.error("خطا در ذخیره پست‌ها:", error);
+            }
+        }
+
+        async function addPost() {
             let userName = document.getElementById("userName").value;
             let postText = document.getElementById("postText").value;
             let postImageInput = document.getElementById("postImage");
@@ -99,40 +127,32 @@
 
             if (userName.trim() !== "" && postText.trim() !== "" && postImage) {
                 let reader = new FileReader();
-                reader.onload = function(event) {
-                    let post = { name: userName, text: postText, image: event.target.result, likes: 0, liked: false };
+                reader.onload = async function(event) {
+                    let posts = await fetchPosts();
+                    let post = { name: userName, text: postText, image: event.target.result, likes: 0, likedUsers: [] };
                     posts.push(post);
-                    localStorage.setItem("posts", JSON.stringify(posts));
-                    document.getElementById("userName").value = "";
-                    document.getElementById("postText").value = "";
-                    postImageInput.value = "";
+                    await savePosts(posts);
                     renderPosts();
                 };
                 reader.readAsDataURL(postImage);
             }
         }
 
-        function toggleLike(index) {
-            if (!posts[index].liked) {
+        async function toggleLike(index) {
+            let user = prompt("نام خود را وارد کنید:").trim();
+            if (!user) return;
+
+            let posts = await fetchPosts();
+            if (!posts[index].likedUsers.includes(user)) {
                 posts[index].likes++;
-                posts[index].liked = true;
-                localStorage.setItem("posts", JSON.stringify(posts));
-            }
-            renderPosts();
-        }
-
-        function deletePost(index) {
-            let password = prompt("برای حذف پست، رمز عبور را وارد کنید:");
-            if (password === "dlipro") {
-                posts.splice(index, 1);
-                localStorage.setItem("posts", JSON.stringify(posts));
+                posts[index].likedUsers.push(user);
+                await savePosts(posts);
                 renderPosts();
-            } else {
-                alert("رمز عبور اشتباه است!");
             }
         }
 
-        function renderPosts() {
+        async function renderPosts() {
+            let posts = await fetchPosts();
             let postsContainer = document.getElementById("posts");
             postsContainer.innerHTML = "";
             posts.forEach((post, index) => {
@@ -142,8 +162,7 @@
                         <p>${post.text}</p>
                         <img src="${post.image}" class="post-image" alt="Post Image">
                         <div class="actions">
-                            <button onclick="toggleLike(${index})" ${post.liked ? 'disabled' : ''}>❤️ لایک (${post.likes})</button>
-                            <button onclick="deletePost(${index})">🗑 حذف پست</button>
+                            <button onclick="toggleLike(${index})">❤️ لایک (${post.likes})</button>
                         </div>
                     </div>
                 `;
