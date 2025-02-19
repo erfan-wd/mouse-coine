@@ -3,173 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iPro - شبکه اجتماعی</title>
+    <title>GoldCoin Wallet</title>
     <style>
-        body {
-            font-family: 'Tahoma', sans-serif;
-            background-color: #f9f9f9;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #4a148c;
-            color: white;
-            padding: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-        main {
-            margin-top: 20px;
-        }
-        .post-form {
-            background: white;
-            padding: 20px;
-            width: 50%;
-            margin: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        input[type="text"], input[type="file"] {
-            width: 90%;
-            padding: 10px;
-            margin-top: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #7b1fa2;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #6a1b9a;
-        }
-        .post-container {
-            width: 50%;
-            margin: 20px auto;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: left;
-        }
-        .post-image {
-            width: 100%;
-            object-fit: contain;
-            border-radius: 10px;
-            margin-top: 10px;
-        }
-        .actions {
-            margin-top: 10px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; margin: auto; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background: #218838; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <header>
-        iPro - شبکه اجتماعی جهانی
-    </header>
-    
-    <main>
-        <div class="post-form">
-            <input type="text" id="userName" placeholder="نام خود را وارد کنید...">
-            <input type="text" id="postText" placeholder="متن پست را وارد کنید...">
-            <input type="file" id="postImage" accept="image/*">
-            <button onclick="addPost()">ارسال پست</button>
-        </div>
-        <div id="posts"></div>
-    </main>
-    
+    <h1>GoldCoin Wallet</h1>
+    <div class="container" id="auth">
+        <input type="text" id="username" placeholder="نام کاربری">
+        <button onclick="login()">ورود</button>
+    </div>
+    <div class="container hidden" id="dashboard">
+        <h2>خوش آمدی، <span id="userDisplay"></span></h2>
+        <p>موجودی شما: <span id="goldBalance">0</span> GoldCoin</p>
+        <button onclick="logout()" style="background: red;">خروج</button>
+    </div>
+
     <script>
-        const BIN_ID = "67b5bf74e41b4d34e493e59e";
-        const API_KEY = "$2a$10$gyNnqXJRB2tBmCzwn8DjiulCKFUkq.WFX4x3jwbWptuRbZB8zEJJq";
-        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        const GITHUB_REPO = "Erfan-WD/goldcoin-exchange"; // نام مخزن گیت‌هاب
+        const FILE_PATH = "users.json";
+        const GITHUB_TOKEN = "GITHUB_PERSONAL_ACCESS_TOKEN"; // ⚠️ اینو با توکن خودت جایگزین کن
 
-        async function fetchPosts() {
-            try {
-                let response = await fetch(`${API_URL}/latest`, {
-                    headers: { "X-Master-Key": API_KEY }
-                });
-                let data = await response.json();
-                return data.record.posts || [];
-            } catch (error) {
-                console.error("خطا در دریافت پست‌ها:", error);
-                return [];
-            }
-        }
-
-        async function savePosts(posts) {
-            try {
-                await fetch(API_URL, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Master-Key": API_KEY
-                    },
-                    body: JSON.stringify({ posts: posts })
-                });
-            } catch (error) {
-                console.error("خطا در ذخیره پست‌ها:", error);
-            }
-        }
-
-        async function addPost() {
-            let userName = document.getElementById("userName").value;
-            let postText = document.getElementById("postText").value;
-            let postImageInput = document.getElementById("postImage");
-            let postImage = postImageInput.files[0];
-
-            if (userName.trim() !== "" && postText.trim() !== "" && postImage) {
-                let reader = new FileReader();
-                reader.onload = async function(event) {
-                    let posts = await fetchPosts();
-                    let post = { name: userName, text: postText, image: event.target.result, likes: 0, likedUsers: [] };
-                    posts.push(post);
-                    await savePosts(posts);
-                    renderPosts();
-                };
-                reader.readAsDataURL(postImage);
-            }
-        }
-
-        async function toggleLike(index) {
-            let user = prompt("نام خود را وارد کنید:").trim();
-            if (!user) return;
-
-            let posts = await fetchPosts();
-            if (!posts[index].likedUsers.includes(user)) {
-                posts[index].likes++;
-                posts[index].likedUsers.push(user);
-                await savePosts(posts);
-                renderPosts();
-            }
-        }
-
-        async function renderPosts() {
-            let posts = await fetchPosts();
-            let postsContainer = document.getElementById("posts");
-            postsContainer.innerHTML = "";
-            posts.forEach((post, index) => {
-                postsContainer.innerHTML += `
-                    <div class="post-container">
-                        <h4>${post.name}</h4>
-                        <p>${post.text}</p>
-                        <img src="${post.image}" class="post-image" alt="Post Image">
-                        <div class="actions">
-                            <button onclick="toggleLike(${index})">❤️ لایک (${post.likes})</button>
-                        </div>
-                    </div>
-                `;
+        async function getUsers() {
+            const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+            const response = await fetch(url, {
+                headers: { "Authorization": `token ${GITHUB_TOKEN}` }
             });
+            if (!response.ok) return { users: [] };
+            const data = await response.json();
+            return JSON.parse(atob(data.content));
         }
 
-        renderPosts();
+        async function login() {
+            const username = document.getElementById("username").value.trim();
+            if (!username) return alert("نام کاربری را وارد کنید!");
+
+            const usersData = await getUsers();
+            const user = usersData.users.find(u => u.username === username);
+            
+            if (!user) {
+                return alert("کاربر یافت نشد! لطفاً با ادمین هماهنگ کنید.");
+            }
+
+            localStorage.setItem("loggedInUser", username);
+            document.getElementById("auth").classList.add("hidden");
+            document.getElementById("dashboard").classList.remove("hidden");
+            document.getElementById("userDisplay").textContent = username;
+            document.getElementById("goldBalance").textContent = user.goldcoin;
+        }
+
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+            document.getElementById("auth").classList.remove("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+        }
+
+        (function checkLogin() {
+            const username = localStorage.getItem("loggedInUser");
+            if (username) {
+                document.getElementById("auth").classList.add("hidden");
+                document.getElementById("dashboard").classList.remove("hidden");
+                document.getElementById("userDisplay").textContent = username;
+                getUsers().then(usersData => {
+                    const user = usersData.users.find(u => u.username === username);
+                    if (user) document.getElementById("goldBalance").textContent = user.goldcoin;
+                });
+            }
+        })();
     </script>
 </body>
 </html>
