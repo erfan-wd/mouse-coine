@@ -198,68 +198,172 @@
       }
     }
   </style>
-  <script><script>
-  let boostCount = 0;
-  let isBoostActive = false;
-  let originalClickValue = gameData.clickValue;
+  <script>
+    (function () {
+      // تعریف داده‌های کارت‌ها
+      const cardTypes = [
+        { id: "card1", name: "کارت برونزی", income: 1, multiplier: 1.5 },
+        { id: "card2", name: "کارت نقره‌ای", income: 5, multiplier: 1.6 },
+        { id: "card3", name: "کارت طلایی", income: 10, multiplier: 1.7 }
+      ];
 
-  // اضافه کردن بوست هر 30 ثانیه
-  setInterval(() => {
-    boostCount++;
-    updateBoostUI();
-  }, 30000);
+      // مقداردهی اولیه داده‌های بازی
+      let gameData = JSON.parse(localStorage.getItem("gameData")) || {
+        score: 0,
+        clickValue: 1,
+        upgradeCost: 10,
+        energy: 10,
+        maxEnergy: 10,
+        lastEnergyTime: Date.now(),
+        cards: {
+          card1: { count: 0, cost: 100 },
+          card2: { count: 0, cost: 500 },
+          card3: { count: 0, cost: 2000 }
+        }
+      };
 
-  function activateBoost() {
-    if (boostCount > 0 && !isBoostActive) {
-      boostCount--;
-      isBoostActive = true;
-      gameData.clickValue += 30;
-      updateBoostUI();
-      setTimeout(() => {
-        gameData.clickValue = originalClickValue;
-        isBoostActive = false;
-      }, 10000);
-    } else {
-      alert("بوست کافی نداری یا در حال حاضر فعال است!");
-    }
-  }
+      function saveGame() {
+        localStorage.setItem("gameData", JSON.stringify(gameData));
+      }
 
-  function updateBoostUI() {
-    document.getElementById("boostCounter").innerText = "بوست‌ها: " + boostCount;
-  }
+      // پخش افکت صوتی کوتاه هنگام کلیک
+      function playClickSound() {
+        try {
+          let context = new (window.AudioContext || window.webkitAudioContext)();
+          let oscillator = context.createOscillator();
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(200, context.currentTime);
+          oscillator.connect(context.destination);
+          oscillator.start();
+          oscillator.stop(context.currentTime + 0.1);
+        } catch (e) {
+          // در صورت عدم پشتیبانی یا خطا، صدا پخش نمی‌شود
+        }
+      }
 
-  function hitMouse() {
-    if (gameData.energy > 0) {
-      playClickSound();
-      gameData.score += gameData.clickValue;
-      gameData.energy--;
-      showClickEffect(gameData.clickValue);
-      saveGame();
-      updateUI();
-    } else {
-      alert("انرژی کافی نداری! منتظر بمون تا بازیابی بشه.");
-    }
-  }
+      function hitMouse() {
+        if (gameData.energy > 0) {
+          playClickSound();
+          gameData.score += gameData.clickValue;
+          gameData.energy--;
+          saveGame();
+          updateUI();
+        } else {
+          alert("انرژی کافی نداری! منتظر بمون تا بازیابی بشه.");
+        }
+      }
 
-  function showClickEffect(value) {
-    let effect = document.createElement("div");
-    effect.innerText = "+" + value;
-    effect.style.position = "absolute";
-    effect.style.left = "50%";
-    effect.style.top = "50%";
-    effect.style.transform = "translate(-50%, -50%)";
-    effect.style.color = "yellow";
-    effect.style.fontSize = "1.5rem";
-    effect.style.fontWeight = "bold";
-    effect.style.animation = "fadeOut 1s forwards";
-    document.body.appendChild(effect);
-    setTimeout(() => effect.remove(), 1000);
-  }
-</script>
+      function buyUpgrade() {
+        if (gameData.score >= gameData.upgradeCost) {
+          gameData.score -= gameData.upgradeCost;
+          gameData.clickValue++;
+          gameData.upgradeCost = Math.floor(gameData.upgradeCost * 1.5);
+          saveGame();
+          updateUI();
+        } else {
+          alert("امتیاز کافی برای ارتقا نداری!");
+        }
+      }
 
-<button onclick="activateBoost()">🎉 فعال کردن بوست</button>
-<p id="boostCounter">بوست‌ها: 0</p>
+      function resetGame() {
+        if (confirm("آیا مطمئن هستید که می‌خواهید بازی را ریست کنید؟")) {
+          gameData = {
+            score: 0,
+            clickValue: 1,
+            upgradeCost: 10,
+            energy: 10,
+            maxEnergy: 10,
+            lastEnergyTime: Date.now(),
+            cards: {
+              card1: { count: 0, cost: 100 },
+              card2: { count: 0, cost: 500 },
+              card3: { count: 0, cost: 2000 }
+            }
+          };
+          saveGame();
+          updateUI();
+          updateCardsUI();
+        }
+      }
 
+      // درآمد غیرفعال از کارت‌ها (هر ثانیه)
+      function passiveIncome() {
+        let totalIncome = 0;
+        cardTypes.forEach(function(card) {
+          let cardData = gameData.cards[card.id];
+          totalIncome += cardData.count * card.income;
+        });
+        if (totalIncome > 0) {
+          gameData.score += totalIncome;
+          saveGame();
+          updateUI();
+        }
+      }
+
+      function updateUI() {
+        document.getElementById("score").innerText = "امتیاز: " + gameData.score;
+        document.getElementById("energy").innerText = "انرژی: " + gameData.energy + "/" + gameData.maxEnergy;
+        document.getElementById("upgradeButton").innerText = "افزایش قدرت کلیک (هزینه: " + gameData.upgradeCost + ")";
+        document.getElementById("clickButton").disabled = (gameData.energy === 0);
+        updateCardsUI();
+      }
+
+      function updateCardsUI() {
+        let container = document.getElementById("cardsContainer");
+        container.innerHTML = "";
+        cardTypes.forEach(function(card) {
+          let cardData = gameData.cards[card.id];
+          let cardDiv = document.createElement("div");
+          cardDiv.className = "card";
+          cardDiv.innerHTML = `
+            <h3>${card.name}</h3>
+            <p>تعداد: ${cardData.count}</p>
+            <p>هزینه: ${cardData.cost}</p>
+            <p>درآمد: ${card.income} کوین/ثانیه</p>
+            <button onclick="buyCard('${card.id}')">خرید</button>
+          `;
+          container.appendChild(cardDiv);
+        });
+      }
+
+      function buyCard(cardId) {
+        let cardType = cardTypes.find(c => c.id === cardId);
+        let cardData = gameData.cards[cardId];
+        if (gameData.score >= cardData.cost) {
+          gameData.score -= cardData.cost;
+          cardData.count++;
+          cardData.cost = Math.floor(cardData.cost * cardType.multiplier);
+          saveGame();
+          updateUI();
+        } else {
+          alert("امتیاز کافی برای خرید این کارت نداری!");
+        }
+      }
+
+      // ست کردن تایمرها
+      setInterval(function() {
+        // بازیابی انرژی هر 1500 میلی‌ثانیه
+        let now = Date.now();
+        let timePassed = Math.floor((now - gameData.lastEnergyTime) / 1500);
+        if (timePassed > 0) {
+          gameData.energy = Math.min(gameData.maxEnergy, gameData.energy + timePassed);
+          gameData.lastEnergyTime = now;
+          saveGame();
+          updateUI();
+        }
+      }, 1500);
+
+      setInterval(passiveIncome, 1000);
+
+      window.onload = function() {
+        updateUI();
+      };
+
+      window.hitMouse = hitMouse;
+      window.buyUpgrade = buyUpgrade;
+      window.resetGame = resetGame;
+      window.buyCard = buyCard;
+    })();
   </script>
 </head>
 <body>
